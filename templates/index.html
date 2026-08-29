@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReAlimenta - Quiz sobre desperdício de alimentos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body class="realimenta-bg d-flex align-items-center justify-content-center min-vh-100">
+    {% set icone_svg = url_for('static', filename='img/icones-pixel.svg') %}
+    <div class="scene-decor" aria-hidden="true"></div>
+
+    <button type="button" class="btn-mudo" data-botao-mudo title="Silenciar som" aria-pressed="false">
+        <span class="icone-som-on"><svg class="icone-pixel" aria-hidden="true"><use href="{{ icone_svg }}#sound-on"></use></svg></span>
+        <span class="icone-som-off"><svg class="icone-pixel" aria-hidden="true"><use href="{{ icone_svg }}#sound-off"></use></svg></span>
+    </button>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-sm-9 col-md-7 col-lg-5">
+
+                <div class="text-center mb-4">
+                    <h1 class="realimenta-logo">Re<span class="logo-accent">AL</span>imenta</h1>
+                    <p class="realimenta-subtitle">QUIZ SOBRE DESPERDÍCIO DE ALIMENTOS</p>
+                </div>
+
+                <div class="quiz-container login-card">
+                    <label for="apelido" class="field-label">DIGITE SEU APELIDO</label>
+
+                    {% if erro %}
+                    <div class="alert-neon mb-3">{{ erro }}</div>
+                    {% endif %}
+
+                    <form action="{{ url_for('iniciar') }}" method="POST" id="form-jogar">
+                        <div class="nickname-input-wrap mb-4">
+                            <input
+                                type="text"
+                                class="nickname-input"
+                                id="apelido"
+                                name="apelido"
+                                placeholder="Jogador1"
+                                maxlength="20"
+                                required
+                                autofocus
+                            >
+                            <span class="nickname-icon" aria-hidden="true">✎</span>
+                        </div>
+
+                        <button type="submit" class="btn-neon btn-neon-green w-100">
+                            JOGAR &gt;
+                        </button>
+                    </form>
+                </div>
+
+                <div class="row g-3 mt-1">
+                    <div class="col-6">
+                        <a href="{{ url_for('ranking_page') }}" class="btn-neon btn-neon-outline w-100">
+                            <img src="{{ url_for('static', filename='img/ranking.webp') }}" class="icone-pixel" alt="" aria-hidden="true"> RANKING
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <button type="button" class="btn-neon btn-neon-outline w-100" data-bs-toggle="modal" data-bs-target="#comoJogarModal">
+                            <img src="{{ url_for('static', filename='img/duvida.webp') }}" class="icone-pixel" alt="" aria-hidden="true"> COMO JOGAR
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="comoJogarModal" tabindex="-1" aria-labelledby="comoJogarLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content quiz-container">
+                <div class="modal-header border-0">
+                    <h5 class="field-label mb-0" id="comoJogarLabel">COMO JOGAR</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="how-to-list">
+                        <li>Você terá <strong>60 segundos no total</strong> para responder até 10 perguntas.</li>
+                        <li>O cronômetro pausa enquanto você lê o feedback de cada resposta.</li>
+                        <li>Cada acerto vale <strong>+100 pontos</strong>.</li>
+                        <li>Ao final, veja sua posição no ranking global!</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/sound.js') }}"></script>
+    <script>
+        // toca o som de "jogar" antes de navegar para o quiz
+        document.getElementById("form-jogar").addEventListener("submit", function (ev) {
+            if (this.dataset.enviado) return;
+            if (!document.getElementById("apelido").value.trim()) return;
+            ev.preventDefault();
+            this.dataset.enviado = "1";
+            if (window.ReAlimentaAudio) window.ReAlimentaAudio.sfx.jogar();
+            const form = this;
+            window.setTimeout(function () { form.submit(); }, 220);
+        });
+    </script>
+</body>
+</html>
