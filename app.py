@@ -206,7 +206,12 @@ def nova_partida(apelido):
         "acertos": 0,
         "erros": 0,
         "tempo_restante": float(TEMPO_TOTAL_PARTIDA),
-        "cronometro_ativo_desde": time.time(),
+        # O cronômetro começa PAUSADO (None). Ele só é retomado dentro de
+        # /quiz/estado, depois que a primeira pergunta já foi buscada no
+        # banco — assim o tempo gasto processando a requisição (incluindo
+        # a consulta ao Postgres) não é descontado do jogador antes mesmo
+        # de a pergunta aparecer na tela.
+        "cronometro_ativo_desde": None,
         "respondida_atual": False,
         "finalizada": False,
         # identifica esta partida de forma única para que, mesmo se o
@@ -443,6 +448,16 @@ def quiz_estado():
     if pergunta is None:
         return jsonify({"erro": "Pergunta não encontrada."}), 400
 
+    # Só agora, com a pergunta já carregada e prestes a ser enviada ao
+    # cliente, é que o cronômetro volta a rodar. Se retomássemos antes da
+    # consulta ao banco (como em /quiz/proxima), o tempo gasto nessa
+    # consulta e na ida-e-volta da rede seria descontado silenciosamente
+    # do jogador antes mesmo de a pergunta aparecer na tela, causando o
+    # "salto" no relógio.
+    if not quiz_data["respondida_atual"] and quiz_data.get("cronometro_ativo_desde") is None:
+        retomar_cronometro(quiz_data)
+        session.modified = True
+
     return jsonify(
         {
             "numero": indice + 1,
@@ -474,6 +489,16 @@ def quiz_responder():
         finalizar_partida(quiz_data)
         return jsonify({"tempo_esgotado": True, "redirect": url_for("resultado")})
 
+    # O bônus de rapidez e a pausa do cronômetro são calculados AGORA, assim
+    # que sabemos que a resposta é válida — antes de fazer a consulta ao
+    # banco de dados e de interpretar o JSON. Se isso fosse feito depois da
+    # consulta (como antes), a latência da consulta ao Postgres seria
+    # contabilizada como "tempo que o jogador levou para responder",
+    # reduzindo o bônus e descontando tempo do relógio por um motivo que
+    # não tem nada a ver com a velocidade real do jogador.
+    bonus_tempo = calcular_bonus_rapidez(quiz_data)
+    pausar_cronometro(quiz_data)
+
     dados = request.get_json(silent=True) or {}
     alternativa_id_enviada = dados.get("alternativa_id")
 
@@ -493,12 +518,6 @@ def quiz_responder():
                 alternativa_escolhida = alt
         except (TypeError, ValueError):
             pass
-
-    # calcula o bônus com base no tempo ainda restante do cronômetro atual da resposta
-    bonus_tempo = calcular_bonus_rapidez(quiz_data)
-
-    # servidor sempre pausa o cronômetro ao registrar a resposta
-    pausar_cronometro(quiz_data)
 
     acertou = bool(alternativa_escolhida and alternativa_escolhida["correta"])
 
@@ -549,7 +568,10 @@ def quiz_proxima():
         finalizar_partida(quiz_data)
         return jsonify({"finalizada": True, "redirect": url_for("resultado")})
 
-    retomar_cronometro(quiz_data)
+    # O cronômetro permanece pausado aqui de propósito: só volta a rodar em
+    # /quiz/estado, quando a próxima pergunta já estiver pronta para ser
+    # enviada (ver comentário lá). Isso evita descontar o tempo gasto
+    # buscando a próxima pergunta no banco.
     session.modified = True
     return jsonify({"finalizada": False})
 
