@@ -80,9 +80,15 @@
                     som("fimDeJogo");
                     redirecionando = true;
                     window.location.href = data.redirect;
+                    return;
                 }
+                // Diferença de arredondamento entre o relógio local e o servidor: tenta de novo em seguida.
+                window.setTimeout(notificarTempoEsgotado, 250);
             })
-            .catch(function (err) { console.error(err); });
+            .catch(function (err) {
+                console.error(err);
+                window.setTimeout(notificarTempoEsgotado, 500);
+            });
     }
 
     function esconderFeedbacks() {

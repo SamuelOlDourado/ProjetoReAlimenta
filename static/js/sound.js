@@ -1,15 +1,3 @@
-/* ==========================================================================
-   ReAlimenta — Áudio (trilha sonora + efeitos sonoros)
-
-   Todos os sons são sintetizados em tempo real via Web Audio API (osciladores
-   simples, estilo 8-bit). Não depende de nenhum arquivo de áudio externo,
-   então funciona offline e sem custo de licenciamento.
-
-   Preferência de mudo é salva em localStorage e vale para todas as páginas
-   (o navegador exige interação do usuário para liberar áudio, então a
-   trilha só começa a tocar após o primeiro clique/toque na página).
-   ========================================================================== */
-
 (function (window) {
     "use strict";
 
@@ -62,11 +50,11 @@
     }
 
     /**
-     * Toca um "blip" simples estilo 8-bit.
+     Toca um "blip" simples estilo 8-bit.
      * @param {number} freq frequência inicial em Hz
      * @param {number} duracao duração em segundos
      * @param {OscillatorType} tipo tipo de onda
-     * @param {object} opts { freqFinal, volume, atraso }
+     * @param {object} opts 
      */
     function beep(freq, duracao, tipo, opts) {
         if (!ctx || estaMudo()) return;
@@ -137,11 +125,6 @@
         },
     };
 
-    /* ---------------------------------------------------------------------
-       Trilha sonora: um loop curto de arpejo em 8 passos, agendado com
-       precisão via AudioContext.currentTime (técnica de "lookahead scheduler").
-       ------------------------------------------------------------------- */
-
     const ESCALA_MUSICA = [261.63, 329.63, 392.0, 523.25, 392.0, 329.63, 293.66, 246.94];
     const BPM_MUSICA = 108;
     const DURACAO_PASSO = 60 / BPM_MUSICA / 2;
@@ -172,7 +155,6 @@
                 osc.start(proximoPassoEm);
                 osc.stop(proximoPassoEm + DURACAO_PASSO);
 
-                // um baixo simples uma oitava abaixo a cada 4 passos
                 if (acentuado) {
                     const oscBaixo = ctx.createOscillator();
                     const ganhoBaixo = ctx.createGain();
@@ -250,7 +232,6 @@
             btn.addEventListener("click", alternarMudo);
         });
 
-        // sons de clique/hover em botões e alternativas (delegação de evento)
         document.addEventListener("click", function (ev) {
             const alvo = ev.target.closest(
                 ".btn-neon, .quiz-alternative, [data-som-clique]"
@@ -281,13 +262,6 @@
         document.addEventListener("touchstart", iniciar, { passive: true });
         document.addEventListener("keydown", iniciar);
 
-        // Tenta iniciar a trilha imediatamente ao carregar a página, sem
-        // esperar por um novo clique "aleatório". Quando a navegação até
-        // aqui partiu de um clique (ex.: botão "Próxima pergunta"), a maioria
-        // dos navegadores permite retomar o áudio de imediato porque essa
-        // ativação do usuário "atravessa" a navegação. Se o navegador ainda
-        // assim bloquear (contexto continua suspenso), os listeners acima
-        // ficam como reserva e iniciam tudo no primeiro toque/clique/tecla.
         const c = garantirContexto();
         if (c) {
             const tentarRetomar = c.resume ? c.resume() : Promise.resolve();

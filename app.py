@@ -10,7 +10,7 @@ import psycopg
 from psycopg.rows import dict_row
 from dotenv import load_dotenv
 
-# Carrega o .env sempre da pasta do app.py, não importa de onde o script é executado.
+
 load_dotenv(Path(__file__).resolve().parent / ".env")
 
 app = Flask(__name__)
@@ -19,19 +19,16 @@ app.secret_key = os.environ.get("SECRET_KEY")
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 TOTAL_PERGUNTAS = 10
-TEMPO_TOTAL_PARTIDA = 60  # segundos, para a partida inteira
-TEMPO_REFERENCIA_RAPIDEZ = 14  # segundos: responder dentro desse tempo dá bônus
-BONUS_MAXIMO_POR_ACERTO = 7  # segundos ganhos ao acertar instantaneamente (tempo_gasto ~ 0)
-PONTOS_POR_ACERTO = 100
+TEMPO_TOTAL_PARTIDA = 60  
+TEMPO_REFERENCIA_RAPIDEZ = 14  
+BONUS_MAXIMO_POR_ACERTO = 7  
+PONTOS_MAXIMOS_POR_ACERTO = 100  
+PONTOS_MINIMOS_POR_ACERTO = 10  
 TAMANHO_MAX_APELIDO = 20
 
 
-# ---------------------------------------------------------------------------
-# Banco de dados
-# ---------------------------------------------------------------------------
 
 def get_conn():
-    """Cria uma nova conexão com o PostgreSQL (Neon)."""
     if not DATABASE_URL:
         raise RuntimeError(
             "DATABASE_URL não configurada. Defina a variável de ambiente DATABASE_URL."
@@ -40,7 +37,6 @@ def get_conn():
 
 
 def init_db():
-    """Cria as tabelas do ReAlimenta caso ainda não existam."""
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -73,10 +69,7 @@ def init_db():
                 );
                 """
             )
-            # Migração idempotente: garante que uma mesma partida nunca seja
-            # gravada duas vezes no ranking (ex.: cliques repetidos em
-            # "Próxima pergunta" na última pergunta geram requisições
-            # concorrentes que, sem isso, criavam registros duplicados).
+            # Evita registrar a mesma partida no ranking
             cur.execute("ALTER TABLE ranking ADD COLUMN IF NOT EXISTS partida_id UUID;")
             cur.execute(
                 "CREATE UNIQUE INDEX IF NOT EXISTS idx_ranking_partida_id ON ranking(partida_id);"
@@ -85,7 +78,7 @@ def init_db():
 
 
 def seed_db():
-    """Popula o banco com as perguntas iniciais, caso a tabela esteja vazia."""
+    
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute("SELECT COUNT(*) AS total FROM perguntas;")
@@ -97,8 +90,7 @@ def seed_db():
             with open(script_path, "r", encoding="utf-8") as f:
                 sql = f.read()
 
-            # Sem parâmetros, o psycopg envia a string via protocolo simples,
-            # que aceita múltiplas instruções separadas por ";" em uma chamada.
+
             cur.execute(sql)
         conn.commit()
     return True
@@ -106,14 +98,14 @@ def seed_db():
 
 @app.cli.command("init-db")
 def init_db_command():
-    """Comando: flask --app app init-db"""
+
     init_db()
     print("Tabelas 'perguntas', 'alternativas' e 'ranking' criadas/verificadas com sucesso.")
 
 
 @app.cli.command("seed-db")
 def seed_db_command():
-    """Comando: flask --app app seed-db"""
+    
     init_db()
     inserida = seed_db()
     if inserida:
@@ -123,23 +115,15 @@ def seed_db_command():
 
 
 def _garantir_banco():
-    """Garante que as tabelas existem antes de operações de leitura/escrita."""
+
     try:
         init_db()
     except Exception as e:
         app.logger.warning(f"Não foi possível garantir as tabelas: {e}")
 
 
-# ---------------------------------------------------------------------------
-# Lógica da partida
-# ---------------------------------------------------------------------------
-
 def sortear_ids_perguntas(quantidade=TOTAL_PERGUNTAS):
-    """Sorteia apenas os IDs das perguntas (consulta leve, sem alternativas).
 
-    Guardamos só os IDs na sessão (e não as perguntas inteiras) para o cookie
-    de sessão não ultrapassar o limite de 4KB do navegador.
-    """
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -152,7 +136,7 @@ def sortear_ids_perguntas(quantidade=TOTAL_PERGUNTAS):
 
 
 def buscar_pergunta_por_id(pergunta_id):
-    """Busca uma única pergunta + alternativas do banco, já embaralhadas."""
+  
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -206,17 +190,10 @@ def nova_partida(apelido):
         "acertos": 0,
         "erros": 0,
         "tempo_restante": float(TEMPO_TOTAL_PARTIDA),
-        # O cronômetro começa PAUSADO (None). Ele só é retomado dentro de
-        # /quiz/estado, depois que a primeira pergunta já foi buscada no
-        # banco — assim o tempo gasto processando a requisição (incluindo
-        # a consulta ao Postgres) não é descontado do jogador antes mesmo
-        # de a pergunta aparecer na tela.
+
         "cronometro_ativo_desde": None,
         "respondida_atual": False,
         "finalizada": False,
-        # identifica esta partida de forma única para que, mesmo se o
-        # cliente disparar a finalização mais de uma vez (ex.: cliques
-        # repetidos), o banco só grave um registro no ranking.
         "partida_id": str(uuid.uuid4()),
     }
     session.modified = True
@@ -228,7 +205,7 @@ def partida_ativa():
 
 
 def calcular_tempo_restante(quiz_data):
-    """Calcula o tempo restante considerando se o cronômetro está ativo ou pausado."""
+
     tempo_restante = quiz_data["tempo_restante"]
     ativo_desde = quiz_data.get("cronometro_ativo_desde")
     if ativo_desde is not None:
@@ -238,23 +215,15 @@ def calcular_tempo_restante(quiz_data):
 
 
 def pausar_cronometro(quiz_data):
-    """Congela o tempo restante e marca o cronômetro como pausado."""
     quiz_data["tempo_restante"] = calcular_tempo_restante(quiz_data)
     quiz_data["cronometro_ativo_desde"] = None
 
 
 def retomar_cronometro(quiz_data):
-    """Volta a contar o tempo a partir de agora."""
     quiz_data["cronometro_ativo_desde"] = time.time()
 
 
 def calcular_bonus_rapidez(quiz_data):
-    """Calcula o bônus de tempo (em segundos) por responder rápido e corretamente.
-
-    Quanto mais rápido o jogador responder (dentro de TEMPO_REFERENCIA_RAPIDEZ
-    segundos), maior o bônus, até BONUS_MAXIMO_POR_ACERTO. Depois desse tempo
-    de referência, o bônus é zero.
-    """
     inicio = quiz_data.get("cronometro_ativo_desde")
     if inicio is None:
         return 0.0
@@ -264,18 +233,20 @@ def calcular_bonus_rapidez(quiz_data):
     return round(BONUS_MAXIMO_POR_ACERTO * fracao_rapidez, 1)
 
 
-def finalizar_partida(quiz_data):
-    """Salva o resultado no ranking, calcula a posição e prepara os dados de resultado.
+def calcular_pontos_por_acerto(quiz_data):
+    inicio = quiz_data.get("cronometro_ativo_desde")
+    if inicio is None:
+        return PONTOS_MINIMOS_POR_ACERTO
+    tempo_gasto = time.time() - inicio
+    tempo_gasto = max(0.0, min(tempo_gasto, TEMPO_REFERENCIA_RAPIDEZ))
+    fracao_rapidez = (TEMPO_REFERENCIA_RAPIDEZ - tempo_gasto) / TEMPO_REFERENCIA_RAPIDEZ
+    pontos = PONTOS_MINIMOS_POR_ACERTO + (
+        PONTOS_MAXIMOS_POR_ACERTO - PONTOS_MINIMOS_POR_ACERTO
+    ) * fracao_rapidez
+    return round(pontos)
 
-    O INSERT usa "ON CONFLICT (partida_id) DO NOTHING" porque a sessão do
-    Flask é um cookie assinado no navegador: se o botão de finalizar for
-    clicado várias vezes rapidamente, múltiplas requisições concorrentes
-    podem chegar ao servidor com o mesmo cookie "antigo" (antes de qualquer
-    resposta atualizá-lo). Sem essa proteção, cada uma dessas requisições
-    inseriria uma linha idêntica no ranking. Como o partida_id é o mesmo em
-    todas elas (foi gerado uma única vez, no início da partida), o banco
-    garante que só a primeira seja realmente gravada.
-    """
+
+def finalizar_partida(quiz_data):
     apelido = quiz_data["apelido"]
     pontuacao = quiz_data["pontuacao"]
     acertos = quiz_data["acertos"]
@@ -318,10 +289,6 @@ def finalizar_partida(quiz_data):
 
             if posicao is not None:
                 with conn.cursor() as cur:
-                    # Mostra sempre o pódio (1º-3º) e, além dele, uma "vizinhança"
-                    # ao redor da posição real do jogador (em vez de sempre o
-                    # topo global), para o resultado fazer sentido mesmo quando
-                    # o jogador está longe do topo.
                     inicio_vizinhanca = max(1, posicao - 1)
                     fim_vizinhanca = posicao + 1
                     cur.execute(
@@ -358,9 +325,8 @@ def finalizar_partida(quiz_data):
     session.modified = True
 
 
-# ---------------------------------------------------------------------------
+
 # Rotas de página
-# ---------------------------------------------------------------------------
 
 @app.route("/")
 def index():
@@ -424,13 +390,11 @@ def ranking_page():
     return render_template("ranking.html", ranking=ranking, apelido_atual=apelido_atual)
 
 
-# ---------------------------------------------------------------------------
-# API (usada pelo JavaScript)
-# ---------------------------------------------------------------------------
+
+# API
 
 @app.route("/quiz/estado")
 def quiz_estado():
-    """Retorna a pergunta atual, pontuação e tempo restante da partida."""
     quiz_data = partida_ativa()
     if not quiz_data or quiz_data.get("finalizada"):
         return jsonify({"erro": "Nenhuma partida ativa."}), 400
@@ -448,12 +412,7 @@ def quiz_estado():
     if pergunta is None:
         return jsonify({"erro": "Pergunta não encontrada."}), 400
 
-    # Só agora, com a pergunta já carregada e prestes a ser enviada ao
-    # cliente, é que o cronômetro volta a rodar. Se retomássemos antes da
-    # consulta ao banco (como em /quiz/proxima), o tempo gasto nessa
-    # consulta e na ida-e-volta da rede seria descontado silenciosamente
-    # do jogador antes mesmo de a pergunta aparecer na tela, causando o
-    # "salto" no relógio.
+
     if not quiz_data["respondida_atual"] and quiz_data.get("cronometro_ativo_desde") is None:
         retomar_cronometro(quiz_data)
         session.modified = True
@@ -489,14 +448,9 @@ def quiz_responder():
         finalizar_partida(quiz_data)
         return jsonify({"tempo_esgotado": True, "redirect": url_for("resultado")})
 
-    # O bônus de rapidez e a pausa do cronômetro são calculados AGORA, assim
-    # que sabemos que a resposta é válida — antes de fazer a consulta ao
-    # banco de dados e de interpretar o JSON. Se isso fosse feito depois da
-    # consulta (como antes), a latência da consulta ao Postgres seria
-    # contabilizada como "tempo que o jogador levou para responder",
-    # reduzindo o bônus e descontando tempo do relógio por um motivo que
-    # não tem nada a ver com a velocidade real do jogador.
+
     bonus_tempo = calcular_bonus_rapidez(quiz_data)
+    pontos_por_acerto = calcular_pontos_por_acerto(quiz_data)
     pausar_cronometro(quiz_data)
 
     dados = request.get_json(silent=True) or {}
@@ -522,10 +476,11 @@ def quiz_responder():
     acertou = bool(alternativa_escolhida and alternativa_escolhida["correta"])
 
     if acertou:
-        quiz_data["pontuacao"] += PONTOS_POR_ACERTO
+        quiz_data["pontuacao"] += pontos_por_acerto
         quiz_data["acertos"] += 1
         quiz_data["tempo_restante"] += bonus_tempo
     else:
+        pontos_por_acerto = 0
         quiz_data["erros"] += 1
         bonus_tempo = 0.0
 
@@ -537,7 +492,7 @@ def quiz_responder():
     return jsonify(
         {
             "acertou": acertou,
-            "pontos_ganhos": PONTOS_POR_ACERTO if acertou else 0,
+            "pontos_ganhos": pontos_por_acerto,
             "pontuacao_total": quiz_data["pontuacao"],
             "feedback_escolhida": feedback_escolhida,
             "alternativa_correta": {
@@ -568,18 +523,12 @@ def quiz_proxima():
         finalizar_partida(quiz_data)
         return jsonify({"finalizada": True, "redirect": url_for("resultado")})
 
-    # O cronômetro permanece pausado aqui de propósito: só volta a rodar em
-    # /quiz/estado, quando a próxima pergunta já estiver pronta para ser
-    # enviada (ver comentário lá). Isso evita descontar o tempo gasto
-    # buscando a próxima pergunta no banco.
     session.modified = True
     return jsonify({"finalizada": False})
 
 
 @app.route("/quiz/tempo-esgotado", methods=["POST"])
 def quiz_tempo_esgotado():
-    """Chamado pelo frontend quando o cronômetro local chega a zero.
-    O servidor sempre reconfirma o tempo antes de encerrar a partida."""
     quiz_data = partida_ativa()
     if not quiz_data or quiz_data.get("finalizada"):
         return jsonify({"erro": "Nenhuma partida ativa."}), 400
@@ -614,9 +563,8 @@ def buscar_ranking(limite=20):
         return []
 
 
-# ---------------------------------------------------------------------------
 # Execução local
-# ---------------------------------------------------------------------------
+
 
 if __name__ == "__main__":
     try:
