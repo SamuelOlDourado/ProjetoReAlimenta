@@ -13,6 +13,8 @@
 </head>
 <body class="realimenta-bg min-vh-100">
 
+    <div class="transicao-tela" id="transicao-tela" aria-hidden="true"></div>
+
     <button type="button" class="btn-mudo" data-botao-mudo title="Silenciar som" aria-pressed="false">
         <span class="icone-som-on"><img src="{{ url_for('static', filename='img/Csom.webp') }}" class="icone-pixel tamG" alt="Ícone de som ativado" aria-hidden="true"></span>
         <span class="icone-som-off"><img src="{{ url_for('static', filename='img/Ssom.webp') }}" class="icone-pixel tamG" alt="Ícone de som desativado" aria-hidden="true"></span>
@@ -101,6 +103,7 @@
         </div>
     </div>
 
+    <script src="{{ url_for('static', filename='js/transicao.js') }}"></script>
     <script src="{{ url_for('static', filename='js/sound.js') }}"></script>
 </body>
 </html>

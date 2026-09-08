@@ -20,6 +20,7 @@
     const elExplicacaoErro = document.getElementById("explicacao-erro");
     const elTextoRespostaCorreta = document.getElementById("texto-resposta-correta");
     const elDicaErro = document.getElementById("dica-erro");
+    const elMascoteSprite = document.getElementById("mascote-sprite");
 
     let tempoRestanteLocal = CONFIG.tempoTotalPartida;
     let intervaloTimer = null;
@@ -30,6 +31,25 @@
     function som(nome) {
         if (window.ReAlimentaAudio && window.ReAlimentaAudio.sfx[nome]) {
             window.ReAlimentaAudio.sfx[nome]();
+        }
+    }
+
+    /** Troca a animação do mascote (parado / acerto / erro). Não faz nada se as
+     * imagens do sprite ainda não tiverem sido adicionadas - só troca o atributo. */
+    function mascote(estado) {
+        if (elMascoteSprite) {
+            elMascoteSprite.setAttribute("data-estado", estado);
+        }
+    }
+
+    /** Navega para outra página, fechando a cortina de transição antes (se disponível). */
+    function irPara(url) {
+        if (window.ReAlimentaTransicao) {
+            window.ReAlimentaTransicao.fecharTelaEDepois(function () {
+                window.location.href = url;
+            });
+        } else {
+            window.location.href = url;
         }
     }
 
@@ -79,7 +99,7 @@
                 if (data.tempo_esgotado && data.redirect) {
                     som("fimDeJogo");
                     redirecionando = true;
-                    window.location.href = data.redirect;
+                    irPara(data.redirect);
                     return;
                 }
                 // Diferença de arredondamento entre o relógio local e o servidor: tenta de novo em seguida.
@@ -97,10 +117,11 @@
         elTelaPergunta.classList.remove("d-none");
     }
 
-    function carregarPergunta() {
+    function carregarPergunta(reabrirCortina) {
         respondida = false;
         enviando = false;
         esconderFeedbacks();
+        mascote("parado");
         document.querySelectorAll("[data-proxima]").forEach(function (btn) {
             btn.disabled = false;
         });
@@ -116,11 +137,11 @@
                 if (data.redirect) {
                     som("fimDeJogo");
                     redirecionando = true;
-                    window.location.href = data.redirect;
+                    irPara(data.redirect);
                     return;
                 }
                 if (data.erro) {
-                    window.location.href = "/";
+                    irPara("/");
                     return;
                 }
 
@@ -156,6 +177,17 @@
                 });
 
                 iniciarTimer(data.tempo_restante);
+
+                // Nova pergunta na tela: a música de perguntas (re)começa do zero. A
+                // cortina só precisa ser reaberta aqui quando veio de irParaProxima
+                // (que a fechou antes) — no carregamento inicial da página, o próprio
+                // transicao.js já cuida de abri-la.
+                if (window.ReAlimentaAudio && window.ReAlimentaAudio.tocarMusicaPerguntas) {
+                    window.ReAlimentaAudio.tocarMusicaPerguntas();
+                }
+                if (reabrirCortina && window.ReAlimentaTransicao) {
+                    window.ReAlimentaTransicao.abrirTela();
+                }
             })
             .catch(function (err) {
                 console.error(err);
@@ -181,7 +213,7 @@
                 if (data.tempo_esgotado && data.redirect) {
                     som("fimDeJogo");
                     redirecionando = true;
-                    window.location.href = data.redirect;
+                    irPara(data.redirect);
                     return;
                 }
                 som(data.acertou ? "acerto" : "erro");
@@ -212,6 +244,7 @@
         elTelaPergunta.classList.add("d-none");
 
         if (data.acertou) {
+            mascote("acerto");
             elPontosGanhos.textContent = "+" + data.pontos_ganhos + " PONTOS";
             elDicaAcerto.textContent = data.dica_sustentavel;
             elFeedbackAcerto.classList.remove("d-none");
@@ -223,6 +256,7 @@
                 elBonusTempo.classList.add("d-none");
             }
         } else {
+            mascote("erro");
             elExplicacaoErro.textContent = data.feedback_escolhida || "";
             elTextoRespostaCorreta.textContent = data.alternativa_correta.texto;
             elDicaErro.textContent = "Dica: " + data.dica_sustentavel;
@@ -240,39 +274,54 @@
             btn.disabled = true;
         });
 
-        fetch("/quiz/proxima", { method: "POST" })
-            .then(function (resp) { return resp.json(); })
-            .then(function (data) {
-                if (data.erro) {
-                    console.error(data.erro);
-                    enviandoProxima = false;
-                    document.querySelectorAll("[data-proxima]").forEach(function (btn) {
-                        btn.disabled = false;
-                    });
-                    return;
-                }
-                if (data.finalizada) {
-                    som("fimDeJogo");
-                    redirecionando = true;
-                    window.location.href = data.redirect;
-                    return;
-                }
-                som("proxima");
-                enviandoProxima = false;
-                carregarPergunta();
-            })
-            .catch(function (err) {
-                console.error(err);
-                enviandoProxima = false;
-                document.querySelectorAll("[data-proxima]").forEach(function (btn) {
-                    btn.disabled = false;
-                });
+        function reabilitarBotoes() {
+            enviandoProxima = false;
+            document.querySelectorAll("[data-proxima]").forEach(function (btn) {
+                btn.disabled = false;
             });
+            if (window.ReAlimentaTransicao) window.ReAlimentaTransicao.abrirTela();
+        }
+
+        function buscarProxima() {
+            fetch("/quiz/proxima", { method: "POST" })
+                .then(function (resp) { return resp.json(); })
+                .then(function (data) {
+                    if (data.erro) {
+                        console.error(data.erro);
+                        reabilitarBotoes();
+                        return;
+                    }
+                    if (data.finalizada) {
+                        som("fimDeJogo");
+                        redirecionando = true;
+                        // a cortina já está fechada (fechamos antes de buscar a próxima pergunta)
+                        window.location.href = data.redirect;
+                        return;
+                    }
+                    som("proxima");
+                    enviandoProxima = false;
+                    carregarPergunta(true);
+                })
+                .catch(function (err) {
+                    console.error(err);
+                    reabilitarBotoes();
+                });
+        }
+
+        // Fecha a cortina, busca a próxima pergunta em seguida e só então
+        // carregarPergunta() reabre a tela já com a nova pergunta pronta.
+        if (window.ReAlimentaTransicao) {
+            window.ReAlimentaTransicao.fecharTelaEDepois(buscarProxima);
+        } else {
+            buscarProxima();
+        }
     }
 
     document.querySelectorAll("[data-proxima]").forEach(function (btn) {
         btn.addEventListener("click", irParaProxima);
     });
 
-    document.addEventListener("DOMContentLoaded", carregarPergunta);
+    document.addEventListener("DOMContentLoaded", function () {
+        carregarPergunta(false);
+    });
 })();

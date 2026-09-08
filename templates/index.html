@@ -14,6 +14,8 @@
 </head>
 <body class="realimenta-bg d-flex align-items-center justify-content-center min-vh-100">
 
+    <div class="transicao-tela" id="transicao-tela" aria-hidden="true"></div>
+
     <button type="button" class="btn-mudo" data-botao-mudo title="Silenciar som" aria-pressed="false">
         <span class="icone-som-on"><img src="{{ url_for('static', filename='img/Csom.webp') }}" class="icone-pixel tamG" alt="Ícone de som ativado" aria-hidden="true"></span>
         <span class="icone-som-off"><img src="{{ url_for('static', filename='img/Ssom.webp') }}" class="icone-pixel tamG" alt="Ícone de som desativado" aria-hidden="true"></span>
@@ -42,7 +44,7 @@
                             <span class="nickname-icon" aria-hidden="true">✎</span>
                         </div>
 
-                        <button type="submit" class="btn-neon btn-neon-green w-100">
+                        <button type="submit" class="btn-neon btn-jogar-arcade btn-arcade-diagonal w-100" id="btn-jogar">
                           ▶  JOGAR
                         </button>
                     </form>
@@ -50,12 +52,12 @@
 
                 <div class="row g-3 mt-1">
                     <div class="col-6">
-                        <a href="{{ url_for('ranking_page') }}" class="btn-neon btn-neon-outline index-btns w-100">
+                        <a href="{{ url_for('ranking_page') }}" class="btn-neon btn-ranking-arcade btn-arcade-diagonal index-btns w-100">
                             <img src="{{ url_for('static', filename='img/index/rank.webp') }}" class="icone-pixel tamG" alt="Ícone de troféu de ranking" aria-hidden="true"> RANKING
                         </a>
                     </div>
                     <div class="col-6">
-                        <button type="button" class="btn-neon btn-neon-outline index-btns w-100" data-bs-toggle="modal" data-bs-target="#comoJogarModal">
+                        <button type="button" class="btn-neon btn-comojogar-arcade btn-arcade-diagonal index-btns w-100" data-bs-toggle="modal" data-bs-target="#comoJogarModal">
                             <img src="{{ url_for('static', filename='img/index/livro.webp') }}" class="icone-pixel tamG" alt="Ícone de livro de regras" aria-hidden="true"> COMO JOGAR
                         </button>
                     </div>
@@ -85,17 +87,32 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/transicao.js') }}"></script>
     <script src="{{ url_for('static', filename='js/sound.js') }}"></script>
     <script>
-        // toca o som de "jogar" antes de navegar para o quiz
+        // Ao clicar em "JOGAR": o botão pisca, a música do menu para e toca o som de
+        // start (a função sfx.jogar em sound.js já está com a estrutura pronta, só em
+        // branco por enquanto) — só depois disso a tela fecha e navega para o quiz.
         document.getElementById("form-jogar").addEventListener("submit", function (ev) {
             if (this.dataset.enviado) return;
             if (!document.getElementById("apelido").value.trim()) return;
             ev.preventDefault();
             this.dataset.enviado = "1";
-            if (window.ReAlimentaAudio) window.ReAlimentaAudio.sfx.jogar();
+
+            const botao = document.getElementById("btn-jogar");
+            if (botao) botao.classList.add("piscando-arcade");
+
+            if (window.ReAlimentaAudio) {
+                window.ReAlimentaAudio.pararMusica();
+                window.ReAlimentaAudio.sfx.jogar();
+            }
+
             const form = this;
-            window.setTimeout(function () { form.submit(); }, 220);
+            if (window.ReAlimentaTransicao) {
+                window.ReAlimentaTransicao.fecharTelaEDepois(function () { form.submit(); });
+            } else {
+                window.setTimeout(function () { form.submit(); }, 480);
+            }
         });
     </script>
 </body>

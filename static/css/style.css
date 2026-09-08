@@ -37,9 +37,23 @@
     --bronze: #dc9457;
     --bronze-escuro: #b06a30;
 
-    --raio-card: 26px;
-    --raio-card-sm: 18px;
+    --raio-card: 14px;
+    --raio-card-sm: 10px;
     --raio-pill: 999px;
+
+    /* Borda e relevo padronizados (estilo arcade) usados em todos os cards */
+    --borda-jogo: #000;
+    --borda-jogo-largura: 3px;
+
+    /* Cores do padrão diagonal em loop (fundo geral e botões/cards temáticos) */
+    --diag-menu-clara: #2f7d45;
+    --diag-menu-escura: #1d5230;
+    --diag-jogar-clara: #e8544a;
+    --diag-jogar-escura: #b93b32;
+    --diag-ranking-clara: #ffd75c;
+    --diag-ranking-escura: #e0a422;
+    --diag-comojogar-clara: #cdeaff;
+    --diag-comojogar-escura: #9fd6fb;
 }
 
 * {
@@ -60,17 +74,38 @@ body {
     font-family: 'Nunito', 'Quicksand', system-ui, sans-serif;
     color: var(--texto);
     cursor: auto;
-    background-image: url('../img/FundoGame.webp');
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
 }
 
+/* Fundo geral: padrão diagonal em loop infinito, estilo "nível secreto" pixelado.
+   Reaproveitado (com outras cores) nos botões Jogar / Ranking / Como Jogar. */
+@keyframes scrollDiagonal {
+    from { background-position: 0 0; }
+    to   { background-position: 120px 120px; }
+}
+
+@keyframes scrollDiagonalSmall {
+    from { background-position: 0 0; }
+    to   { background-position: 64px 64px; }
+}
+
+.realimenta-bg {
+    background-image: repeating-linear-gradient(45deg,
+        var(--diag-menu-clara) 0px, var(--diag-menu-clara) 30px,
+        var(--diag-menu-escura) 30px, var(--diag-menu-escura) 60px);
+    background-repeat: repeat;
+    background-attachment: fixed;
+    animation: scrollDiagonal 3.6s linear infinite;
+}
 
 @media (max-width: 768px) {
-    body {
+    .realimenta-bg {
         background-attachment: scroll;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .realimenta-bg {
+        animation: none;
     }
 }
 
@@ -111,6 +146,22 @@ a, button, .quiz-alternative, .btn-neon, [role="button"], input[type="submit"] {
 
 .realimenta-logo {
     width: 65%;
+    display: inline-block;
+    animation: logoGiroDiagonal 4.2s ease-in-out infinite;
+    transform-origin: 50% 50%;
+}
+
+/* Gira suavemente entre as duas diagonais, acelerando e desacelerando (ease-in-out) em cada ponta */
+@keyframes logoGiroDiagonal {
+    0%   { transform: rotate(-9deg); }
+    50%  { transform: rotate(9deg); }
+    100% { transform: rotate(-9deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .realimenta-logo {
+        animation: none;
+    }
 }
 
 
@@ -128,9 +179,9 @@ a, button, .quiz-alternative, .btn-neon, [role="button"], input[type="submit"] {
 
 .quiz-container {
     background: var(--cream);
-    border: 2px dashed var(--cream-borda);
+    border: var(--borda-jogo-largura) solid var(--borda-jogo);
     border-radius: var(--raio-card);
-    box-shadow: 0 14px 0 -6px rgba(0,0,0,0.05), 0 18px 34px rgba(60, 40, 10, 0.16);
+    box-shadow: 0 8px 0 var(--borda-jogo), 0 18px 34px rgba(60, 40, 10, 0.16);
     padding: 1.75rem;
 }
 
@@ -235,9 +286,8 @@ a, button, .quiz-alternative, .btn-neon, [role="button"], input[type="submit"] {
 }
 
 .index-btns {
-    border-radius: 22px !important;
+    border-radius: var(--raio-card) !important;
     padding: 14px 10px;
-    border-color: rgba(255, 255, 255, 0.55) !important;
 }
 
 .btn-neon:hover,
@@ -294,20 +344,6 @@ a, button, .quiz-alternative, .btn-neon, [role="button"], input[type="submit"] {
     box-shadow: 0 2px 0 var(--roxo-escuro);
 }
 
-
-.row.g-3 .col-6:nth-child(2) .btn-neon-outline {
-    background: linear-gradient(180deg, #64aad6, var(--azul));
-    box-shadow: 0 6px 0 var(--azul-escuro), 0 10px 18px rgba(47, 130, 191, 0.3);
-}
-
-.row.g-3 .col-6:nth-child(2) .btn-neon-outline:hover {
-    box-shadow: 0 8px 0 var(--azul-escuro), 0 14px 20px rgba(47, 130, 191, 0.3);
-}
-
-.row.g-3 .col-6:nth-child(2) .btn-neon-outline:active {
-    box-shadow: 0 2px 0 var(--azul-escuro);
-}
-
 .btn-sm-neon {
     padding: 0.55rem 1.1rem;
     font-size: 0.82rem;
@@ -330,10 +366,10 @@ a, button, .quiz-alternative, .btn-neon, [role="button"], input[type="submit"] {
     gap: 0.6rem;
     flex-wrap: wrap;
     background: var(--cream);
-    border: 2px solid var(--cream-borda);
-    border-radius: 18px;
+    border: var(--borda-jogo-largura) solid var(--borda-jogo);
+    border-radius: var(--raio-card-sm);
     padding: 0.7rem 0.9rem;
-    box-shadow: 0 10px 22px rgba(60, 40, 10, 0.14);
+    box-shadow: 0 6px 0 var(--borda-jogo), 0 10px 22px rgba(60, 40, 10, 0.14);
     margin-bottom: 1.1rem;
 }
 
@@ -423,7 +459,7 @@ a, button, .quiz-alternative, .btn-neon, [role="button"], input[type="submit"] {
 
 .quiz-question {
     background: var(--cream);
-    border: 2px dashed var(--cream-borda);
+    border: var(--borda-jogo-largura) solid var(--borda-jogo);
     border-radius: var(--raio-card-sm);
     padding: 1.35rem 1.5rem;
     font-family: 'Baloo 2', sans-serif;
@@ -433,7 +469,7 @@ a, button, .quiz-alternative, .btn-neon, [role="button"], input[type="submit"] {
     margin-bottom: 1.3rem;
     line-height: 1.5;
     color: var(--texto);
-    box-shadow: 0 10px 22px rgba(60, 40, 10, 0.12);
+    box-shadow: 0 6px 0 var(--borda-jogo), 0 10px 22px rgba(60, 40, 10, 0.12);
 }
 
 .quiz-alternatives {
@@ -528,10 +564,10 @@ a, button, .quiz-alternative, .btn-neon, [role="button"], input[type="submit"] {
     text-align: center;
     animation: feedbackIn 0.3s ease;
     background: var(--cream);
-    border: 2px dashed var(--cream-borda);
+    border: var(--borda-jogo-largura) solid var(--borda-jogo);
     border-radius: var(--raio-card);
     padding: 1.9rem 1.6rem;
-    box-shadow: 0 14px 30px rgba(60, 40, 10, 0.16);
+    box-shadow: 0 8px 0 var(--borda-jogo), 0 14px 30px rgba(60, 40, 10, 0.16);
 }
 
 @keyframes feedbackIn {
@@ -611,10 +647,11 @@ a, button, .quiz-alternative, .btn-neon, [role="button"], input[type="submit"] {
     gap: 0.85rem;
     text-align: left;
     background: var(--verde-claro);
-    border: 2px dashed #bfe0a8;
-    border-radius: 16px;
+    border: var(--borda-jogo-largura) solid var(--borda-jogo);
+    border-radius: var(--raio-card-sm);
     padding: 1rem 1.25rem;
     margin-bottom: 1.5rem;
+    box-shadow: 0 4px 0 var(--borda-jogo);
 }
 
 .dica-icone {
@@ -646,18 +683,18 @@ a, button, .quiz-alternative, .btn-neon, [role="button"], input[type="submit"] {
 
 .feedback-explicacao {
     text-align: left;
-    border-radius: 16px;
+    border-radius: var(--raio-card-sm);
     padding: 1.05rem 1.25rem;
+    border: var(--borda-jogo-largura) solid var(--borda-jogo);
+    box-shadow: 0 4px 0 var(--borda-jogo);
 }
 
 .feedback-explicacao-erro {
     background: var(--azul-claro);
-    border: 2px solid #bfe0f5;
 }
 
 .feedback-explicacao-correta {
     background: var(--verde-claro);
-    border: 2px solid #bfe0a8;
 }
 
 .explicacao-titulo {
@@ -699,10 +736,10 @@ a, button, .quiz-alternative, .btn-neon, [role="button"], input[type="submit"] {
 
 .resultado-container {
     background: var(--cream);
-    border: 2px dashed var(--cream-borda);
+    border: var(--borda-jogo-largura) solid var(--borda-jogo);
     border-radius: var(--raio-card);
     padding: 2.1rem 1.75rem;
-    box-shadow: 0 14px 30px rgba(60, 40, 10, 0.16);
+    box-shadow: 0 8px 0 var(--borda-jogo), 0 14px 30px rgba(60, 40, 10, 0.16);
 }
 
 .resultado-titulo {
@@ -722,11 +759,11 @@ a, button, .quiz-alternative, .btn-neon, [role="button"], input[type="submit"] {
 
 .resultado-card {
     background: #fffdf7;
-    border: 2px solid var(--cream-borda);
-    border-radius: 16px;
+    border: var(--borda-jogo-largura) solid var(--borda-jogo);
+    border-radius: var(--raio-card-sm);
     padding: 1.3rem 1rem;
     height: 100%;
-    box-shadow: 0 6px 14px rgba(60, 40, 10, 0.08);
+    box-shadow: 0 5px 0 var(--borda-jogo), 0 6px 14px rgba(60, 40, 10, 0.08);
 }
 
 .resultado-card-icone {
@@ -770,9 +807,10 @@ a, button, .quiz-alternative, .btn-neon, [role="button"], input[type="submit"] {
 
 .posicao-ranking-box {
     background: var(--azul-claro);
-    border: 2px solid #bfe0f5;
-    border-radius: 16px;
+    border: var(--borda-jogo-largura) solid var(--borda-jogo);
+    border-radius: var(--raio-card-sm);
     padding: 1.1rem 1.25rem;
+    box-shadow: 0 5px 0 var(--borda-jogo);
 }
 
 .posicao-titulo {
@@ -862,19 +900,25 @@ a, button, .quiz-alternative, .btn-neon, [role="button"], input[type="submit"] {
 
 .ranking-container {
     background: var(--cream);
-    border: 2px dashed var(--cream-borda);
+    border: var(--borda-jogo-largura) solid var(--borda-jogo);
     border-radius: var(--raio-card);
-    padding: 1.6rem 1.5rem 0.6rem;
-    box-shadow: 0 14px 30px rgba(60, 40, 10, 0.16);
+    padding: 1.6rem 1.5rem 1.5rem;
+    box-shadow: 0 8px 0 var(--borda-jogo), 0 14px 30px rgba(60, 40, 10, 0.16);
 }
 
 .ranking-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     flex-wrap: wrap;
     gap: 0.75rem;
     margin-bottom: 1.3rem;
+}
+
+.ranking-rodape {
+    display: flex;
+    justify-content: center;
+    margin-top: 1.5rem;
 }
 
 .ranking-titulo {
@@ -978,15 +1022,6 @@ a, button, .quiz-alternative, .btn-neon, [role="button"], input[type="submit"] {
     padding: 0.9rem 0.6rem 0;
 }
 
-.podio-coroa {
-    margin-bottom: 0.3rem;
-}
-
-.podio-coroa .icone-pixel {
-    width: 1.9rem;
-    height: 1.9rem;
-}
-
 .podio-avatar {
     width: 3.4rem;
     height: 3.4rem;
@@ -1001,6 +1036,34 @@ a, button, .quiz-alternative, .btn-neon, [role="button"], input[type="submit"] {
     background: #fff;
     border: 3px solid var(--verde);
     color: var(--verde-escuro);
+    overflow: hidden;
+}
+
+/* Avatar animado do 1º/2º/3º lugar: sprite sheet com 24 quadros em fileira (arquivo único por posição).
+   Basta apontar cada background-image para o arquivo quando as artes estiverem prontas. */
+.podio-avatar-animado {
+    background-repeat: no-repeat;
+    background-position: 0 0;
+    background-size: 2400% 100%;
+    image-rendering: pixelated;
+    animation-name: sprite24Loop;
+    animation-timing-function: steps(23);
+    animation-iteration-count: infinite;
+}
+
+.podio-avatar-animado[data-posicao="1"] {
+    background-image: url('../img/ranking/top1.png');
+    animation-duration: 1.4s;
+}
+
+.podio-avatar-animado[data-posicao="2"] {
+    background-image: url('../img/ranking/top2.png');
+    animation-duration: 1.6s;
+}
+
+.podio-avatar-animado[data-posicao="3"] {
+    background-image: url('../img/ranking/top3.png');
+    animation-duration: 1.8s;
 }
 
 .podio-nome {
@@ -1298,4 +1361,202 @@ a, button, .quiz-alternative, .btn-neon, [role="button"], input[type="submit"] {
 
 .btn-close:hover {
     opacity: 1;
+}
+
+/* ===================== Novidades de refinamento ===================== */
+
+/* Sprite genérico de 24 quadros em fileira (reaproveitado pelo mascote e pelo pódio) */
+@keyframes sprite24Loop {
+    from { background-position: 0% 0; }
+    to   { background-position: 100% 0; }
+}
+
+/* Mascote animado da tela de perguntas (canto inferior direito).
+   Estrutura pronta para receber 3 sprite sheets (24 quadros cada, em fileira):
+   parado (loop constante), acerto e erro (tocam enquanto o feedback está na tela). */
+.mascote-wrap {
+    position: fixed;
+    right: max(1rem, env(safe-area-inset-right));
+    bottom: max(1rem, env(safe-area-inset-bottom));
+    z-index: 45;
+    width: 6.5rem;
+    height: 6.5rem;
+    pointer-events: none;
+}
+
+.mascote-sprite {
+    width: 100%;
+    height: 100%;
+    background-repeat: no-repeat;
+    background-position: 0% 0;
+    background-size: 2400% 100%;
+    image-rendering: pixelated;
+    animation-name: sprite24Loop;
+    animation-timing-function: steps(23);
+    animation-iteration-count: infinite;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.35));
+}
+
+.mascote-sprite[data-estado="parado"] {
+    background-image: url('../img/mascote/parado.png');
+    animation-duration: 1.8s;
+}
+
+.mascote-sprite[data-estado="acerto"] {
+    background-image: url('../img/mascote/acerto.png');
+    animation-duration: 1s;
+}
+
+.mascote-sprite[data-estado="erro"] {
+    background-image: url('../img/mascote/erro.png');
+    animation-duration: 1s;
+}
+
+@media (max-width: 576px) {
+    .mascote-wrap {
+        width: 4.6rem;
+        height: 4.6rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mascote-sprite,
+    .podio-avatar-animado {
+        animation: none;
+        background-position: 0 0;
+    }
+}
+
+/* Botões com o mesmo efeito de fundo diagonal do menu, em outras cores */
+.btn-arcade-diagonal {
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    border: var(--borda-jogo-largura) solid var(--borda-jogo) !important;
+    background-repeat: repeat;
+    animation: scrollDiagonalSmall 2.4s linear infinite;
+}
+
+.btn-jogar-arcade {
+    background-image: repeating-linear-gradient(45deg,
+        var(--diag-jogar-clara) 0px, var(--diag-jogar-clara) 16px,
+        var(--diag-jogar-escura) 16px, var(--diag-jogar-escura) 32px);
+    box-shadow: 0 7px 0 var(--borda-jogo), 0 11px 18px rgba(185, 59, 50, 0.35);
+}
+
+.btn-jogar-arcade:hover {
+    filter: brightness(1.08);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 9px 0 var(--borda-jogo), 0 14px 20px rgba(185, 59, 50, 0.35);
+}
+
+.btn-jogar-arcade:active {
+    transform: translateY(3px);
+    box-shadow: 0 3px 0 var(--borda-jogo);
+}
+
+.btn-ranking-arcade {
+    color: #4a3300;
+    text-shadow: none;
+    background-image: repeating-linear-gradient(45deg,
+        var(--diag-ranking-clara) 0px, var(--diag-ranking-clara) 16px,
+        var(--diag-ranking-escura) 16px, var(--diag-ranking-escura) 32px);
+    box-shadow: 0 7px 0 var(--borda-jogo), 0 11px 18px rgba(224, 164, 34, 0.35);
+}
+
+.btn-ranking-arcade:hover {
+    filter: brightness(1.05);
+    color: #4a3300;
+    transform: translateY(-2px);
+    box-shadow: 0 9px 0 var(--borda-jogo), 0 14px 20px rgba(224, 164, 34, 0.35);
+}
+
+.btn-ranking-arcade:active {
+    transform: translateY(3px);
+    box-shadow: 0 3px 0 var(--borda-jogo);
+}
+
+.btn-comojogar-arcade {
+    color: #0d3a57;
+    text-shadow: none;
+    background-image: repeating-linear-gradient(45deg,
+        var(--diag-comojogar-clara) 0px, var(--diag-comojogar-clara) 16px,
+        var(--diag-comojogar-escura) 16px, var(--diag-comojogar-escura) 32px);
+    box-shadow: 0 7px 0 var(--borda-jogo), 0 11px 18px rgba(159, 214, 251, 0.45);
+}
+
+.btn-comojogar-arcade:hover {
+    filter: brightness(1.05);
+    color: #0d3a57;
+    transform: translateY(-2px);
+    box-shadow: 0 9px 0 var(--borda-jogo), 0 14px 20px rgba(159, 214, 251, 0.45);
+}
+
+.btn-comojogar-arcade:active {
+    transform: translateY(3px);
+    box-shadow: 0 3px 0 var(--borda-jogo);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .btn-arcade-diagonal {
+        animation: none;
+    }
+}
+
+/* Botão "JOGAR" piscando ao ser clicado, antes de navegar para o quiz */
+@keyframes piscarArcade {
+    0%, 49%   { opacity: 1; }
+    50%, 100% { opacity: 0.25; }
+}
+
+.piscando-arcade {
+    animation: piscarArcade 0.22s steps(1, end) infinite !important;
+}
+
+/* Transição de tela em preto (com padrão de losangos) entre menu -> perguntas -> perguntas -> ranking/resultado */
+.transicao-tela {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background-color: #000;
+    pointer-events: none;
+    transform: scaleY(1);
+    transform-origin: top;
+}
+
+.transicao-tela::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.5;
+    background-image:
+        repeating-linear-gradient(45deg, rgba(255,255,255,0.07) 0 2px, transparent 2px 34px),
+        repeating-linear-gradient(-45deg, rgba(255,255,255,0.07) 0 2px, transparent 2px 34px);
+}
+
+.transicao-tela.transicao-fechando {
+    transform-origin: top;
+    animation: transicaoFechar 0.48s ease-in-out forwards;
+}
+
+.transicao-tela.transicao-abrindo {
+    transform-origin: bottom;
+    animation: transicaoAbrir 0.48s ease-in-out forwards;
+}
+
+@keyframes transicaoFechar {
+    from { transform: scaleY(0); }
+    to   { transform: scaleY(1); }
+}
+
+@keyframes transicaoAbrir {
+    from { transform: scaleY(1); }
+    to   { transform: scaleY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .transicao-tela.transicao-fechando,
+    .transicao-tela.transicao-abrindo {
+        animation-duration: 0.01ms;
+    }
 }

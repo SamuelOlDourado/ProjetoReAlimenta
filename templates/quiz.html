@@ -13,6 +13,15 @@
 </head>
 <body class="realimenta-bg min-vh-100">
 
+    <div class="transicao-tela" id="transicao-tela" aria-hidden="true"></div>
+
+    <!-- Estrutura pronta para o mascote (ainda sem as imagens). Basta colocar os 3 sprite
+         sheets (24 quadros cada, em fileira) em static/img/mascote/parado.png, acerto.png
+         e erro.png que o CSS já assume esses caminhos. -->
+    <div class="mascote-wrap" aria-hidden="true">
+        <div class="mascote-sprite" id="mascote-sprite" data-estado="parado"></div>
+    </div>
+
     <button type="button" class="btn-mudo" data-botao-mudo title="Silenciar som" aria-pressed="false">
         <span class="icone-som-on"><img src="{{ url_for('static', filename='img/Csom.webp') }}" class="icone-pixel tamG" alt="Ícone de som ativado" aria-hidden="true"></span>
         <span class="icone-som-off"><img src="{{ url_for('static', filename='img/Ssom.webp') }}" class="icone-pixel tamG" alt="Ícone de som desativado" aria-hidden="true"></span>
@@ -107,6 +116,7 @@
             tempoTotalPartida: {{ tempo_total_partida }}
         };
     </script>
+    <script src="{{ url_for('static', filename='js/transicao.js') }}"></script>
     <script src="{{ url_for('static', filename='js/sound.js') }}"></script>
     <script src="{{ url_for('static', filename='js/quiz.js') }}"></script>
 </body>
