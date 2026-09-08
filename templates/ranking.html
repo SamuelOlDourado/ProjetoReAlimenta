@@ -13,6 +13,8 @@
 </head>
 <body class="realimenta-bg min-vh-100">
 
+    <div class="transicao-tela" id="transicao-tela" aria-hidden="true"></div>
+
     <button type="button" class="btn-mudo" data-botao-mudo title="Silenciar som" aria-pressed="false">
         <span class="icone-som-on"><img src="{{ url_for('static', filename='img/Csom.webp') }}" class="icone-pixel tamG" alt="Ícone de som ativado" aria-hidden="true"></span>
         <span class="icone-som-off"><img src="{{ url_for('static', filename='img/Ssom.webp') }}" class="icone-pixel tamG" alt="Ícone de som desativado" aria-hidden="true"></span>
@@ -25,9 +27,6 @@
                 <div class="ranking-container">
                     <div class="ranking-header">
                         <h1 class="ranking-titulo">RANKING GLOBAL</h1>
-                        <a href="{{ url_for('index') }}" class="btn-neon btn-danger-outline btn-sm-neon">
-                            VOLTAR AO INÍCIO
-                        </a>
                     </div>
 
                     {% if ranking %}
@@ -36,11 +35,7 @@
                     <div class="podio">
                         {% for jogador in ranking[:3] %}
                         <div class="podio-lugar podio-{{ loop.index }}">
-                            {% if loop.index == 1 %}<div class="podio-coroa"><img src="{{ url_for('static', filename='img/resultado/lugar1.webp') }}" class="icone-pixel" alt="Ícone de 1º lugar" aria-hidden="true"></div>
-                            {% elif loop.index == 2 %}<div class="podio-coroa"><img src="{{ url_for('static', filename='img/resultado/lugar2.webp') }}" class="icone-pixel" alt="Ícone de 2º lugar" aria-hidden="true"></div>
-                            {% else %}<div class="podio-coroa"><img src="{{ url_for('static', filename='img/resultado/lugar3.webp') }}" class="icone-pixel" alt="Ícone de 3º lugar" aria-hidden="true"></div>
-                            {% endif %}
-                            <div class="podio-avatar">{{ jogador.apelido[0]|upper }}</div>
+                            <div class="podio-avatar podio-avatar-animado" data-posicao="{{ loop.index }}" aria-hidden="true"></div>
                             <div class="podio-nome">{{ jogador.apelido }}</div>
                             <div class="podio-pontos">{{ jogador.pontuacao }} PTS</div>
                             <div class="podio-degrau">{{ loop.index }}º</div>
@@ -93,12 +88,19 @@
                     {% else %}
                     <p class="ranking-vazio">Ainda não há partidas registradas. Seja o primeiro a jogar!</p>
                     {% endif %}
+
+                    <div class="ranking-rodape">
+                        <a href="{{ url_for('index') }}" class="btn-neon btn-danger-outline btn-sm-neon">
+                            VOLTAR AO INÍCIO
+                        </a>
+                    </div>
                 </div>
 
             </div>
         </div>
     </div>
 
+    <script src="{{ url_for('static', filename='js/transicao.js') }}"></script>
     <script src="{{ url_for('static', filename='js/sound.js') }}"></script>
 </body>
 </html>

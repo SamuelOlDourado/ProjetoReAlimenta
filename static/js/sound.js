@@ -118,22 +118,38 @@
             });
         },
         jogar: function () {
+            // TODO: som de "start" estilo fliperama/arcade clássico.
+            // Estrutura já pronta: esta função é chamada automaticamente quando o
+            // jogador clica em "JOGAR" no menu (ver index.html), no momento exato em
+            // que a música do menu para e a tela começa a fechar para o quiz.
             if (!ctx || estaMudo()) return;
-            [392, 523.25, 659.25].forEach(function (freq, i) {
-                beep(freq, 0.11, "square", { volume: 0.3, atraso: i * 0.06 });
-            });
         },
     };
 
-    const ESCALA_MUSICA = [261.63, 329.63, 392.0, 523.25, 392.0, 329.63, 293.66, 246.94];
-    const BPM_MUSICA = 108;
-    const DURACAO_PASSO = 60 / BPM_MUSICA / 2;
+    // Duas faixas diferentes: uma para o menu e outra, nova, para quando as perguntas
+    // começam. Trocar de faixa (ver tocarMusicaMenu/tocarMusicaPerguntas) reinicia o
+    // padrão do zero, então cada pergunta nova "recomeça" a música de perguntas.
+    const FAIXAS = {
+        menu: {
+            escala: [261.63, 329.63, 392.0, 523.25, 392.0, 329.63, 293.66, 246.94],
+            bpm: 108,
+        },
+        perguntas: {
+            escala: [349.23, 415.3, 523.25, 622.25, 523.25, 415.3, 392.0, 293.66],
+            bpm: 132,
+        },
+    };
+
+    let faixaAtual = "menu";
+    let duracaoPasso = 60 / FAIXAS.menu.bpm / 2;
 
     function agendarPasso() {
         if (!ctx) return;
+        const faixa = FAIXAS[faixaAtual] || FAIXAS.menu;
+        const escala = faixa.escala;
 
         while (proximoPassoEm < ctx.currentTime + 0.15) {
-            const freq = ESCALA_MUSICA[passoAtual % ESCALA_MUSICA.length];
+            const freq = escala[passoAtual % escala.length];
             const acentuado = passoAtual % 4 === 0;
 
             if (!estaMudo()) {
@@ -147,13 +163,13 @@
                 ganho.gain.exponentialRampToValueAtTime(vol, proximoPassoEm + 0.02);
                 ganho.gain.exponentialRampToValueAtTime(
                     0.0001,
-                    proximoPassoEm + DURACAO_PASSO * 0.9
+                    proximoPassoEm + duracaoPasso * 0.9
                 );
 
                 osc.connect(ganho);
                 ganho.connect(musicaGain);
                 osc.start(proximoPassoEm);
-                osc.stop(proximoPassoEm + DURACAO_PASSO);
+                osc.stop(proximoPassoEm + duracaoPasso);
 
                 if (acentuado) {
                     const oscBaixo = ctx.createOscillator();
@@ -164,16 +180,16 @@
                     ganhoBaixo.gain.exponentialRampToValueAtTime(0.22, proximoPassoEm + 0.02);
                     ganhoBaixo.gain.exponentialRampToValueAtTime(
                         0.0001,
-                        proximoPassoEm + DURACAO_PASSO * 3.6
+                        proximoPassoEm + duracaoPasso * 3.6
                     );
                     oscBaixo.connect(ganhoBaixo);
                     ganhoBaixo.connect(musicaGain);
                     oscBaixo.start(proximoPassoEm);
-                    oscBaixo.stop(proximoPassoEm + DURACAO_PASSO * 4);
+                    oscBaixo.stop(proximoPassoEm + duracaoPasso * 4);
                 }
             }
 
-            proximoPassoEm += DURACAO_PASSO;
+            proximoPassoEm += duracaoPasso;
             passoAtual += 1;
         }
 
@@ -183,6 +199,7 @@
     function iniciarMusica() {
         if (!ctx || musicaAgendada) return;
         musicaAgendada = true;
+        duracaoPasso = 60 / (FAIXAS[faixaAtual] || FAIXAS.menu).bpm / 2;
         proximoPassoEm = ctx.currentTime + 0.05;
         passoAtual = 0;
         agendarPasso();
@@ -194,6 +211,35 @@
             window.clearTimeout(musicaTimeoutId);
             musicaTimeoutId = null;
         }
+    }
+
+    /**
+     * Troca (ou reinicia) a faixa de música atual. Chamada tanto para ligar a
+     * música de perguntas quanto para reiniciá-la a cada nova pergunta.
+     * @param {"menu"|"perguntas"} nome
+     */
+    function tocarFaixa(nome) {
+        if (!FAIXAS[nome]) return;
+        faixaAtual = nome;
+        passoAtual = 0;
+        duracaoPasso = 60 / FAIXAS[nome].bpm / 2;
+
+        if (ctx && musicaAgendada) {
+            // já está tocando: só reinicia o padrão a partir de agora
+            proximoPassoEm = ctx.currentTime + 0.05;
+        } else {
+            // ainda sem contexto de áudio liberado (aguardando 1ª interação do
+            // usuário): guarda a faixa desejada para quando a música ligar.
+            iniciarMusica();
+        }
+    }
+
+    function tocarMusicaMenu() {
+        tocarFaixa("menu");
+    }
+
+    function tocarMusicaPerguntas() {
+        tocarFaixa("perguntas");
     }
 
     function aplicarEstadoMudo() {
@@ -296,5 +342,8 @@
         sfx: sfx,
         estaMudo: estaMudo,
         alternarMudo: alternarMudo,
+        pararMusica: pararMusica,
+        tocarMusicaMenu: tocarMusicaMenu,
+        tocarMusicaPerguntas: tocarMusicaPerguntas,
     };
 })(window);
