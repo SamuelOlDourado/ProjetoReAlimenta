@@ -27,15 +27,18 @@
     function abrirTela() {
         const el = overlay();
         if (!el) return;
-        el.classList.remove("transicao-fechando");
+        el.classList.remove("transicao-fechando", "transicao-abrindo");
         // Garante que a cortina comece fechada (cobrindo tudo) antes de animar a abertura.
         el.style.transform = "scaleY(1)";
-        // Força o navegador a "perceber" o estado acima antes de trocar de classe,
-        // senão a transição para "abrindo" não roda.
-        // eslint-disable-next-line no-unused-expressions
-        el.offsetHeight;
-        el.style.transform = "";
-        el.classList.add("transicao-abrindo");
+        // Espera dois frames antes de trocar de classe: é a forma mais leve de garantir
+        // que o navegador "registre" o estado acima antes de iniciar a animação CSS,
+        // sem forçar um recálculo de layout síncrono (que pode causar engasgos).
+        window.requestAnimationFrame(function () {
+            window.requestAnimationFrame(function () {
+                el.style.transform = "";
+                el.classList.add("transicao-abrindo");
+            });
+        });
     }
 
     function fecharTelaEDepois(callback, duracaoMs) {

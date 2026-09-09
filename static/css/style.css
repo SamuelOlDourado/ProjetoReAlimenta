@@ -79,19 +79,26 @@ body {
 /* Fundo geral: padrão diagonal em loop infinito, estilo "nível secreto" pixelado.
    Reaproveitado (com outras cores) nos botões Jogar / Ranking / Como Jogar. */
 @keyframes scrollDiagonal {
-    from { background-position: 0 0; }
-    to   { background-position: 120px 120px; }
+    from { background-position: 0 0, 35px 35px; }
+    to   { background-position: 140px 140px, 175px 175px; }
 }
 
 @keyframes scrollDiagonalSmall {
-    from { background-position: 0 0; }
-    to   { background-position: 64px 64px; }
+    from { background-position: 0 0, 20px 20px; }
+    to   { background-position: 80px 80px, 100px 100px; }
 }
 
 .realimenta-bg {
-    background-image: repeating-linear-gradient(45deg,
-        var(--diag-menu-clara) 0px, var(--diag-menu-clara) 30px,
-        var(--diag-menu-escura) 30px, var(--diag-menu-escura) 60px);
+    background-color: var(--diag-menu-escura);
+    background-image:
+        linear-gradient(45deg,
+            var(--diag-menu-clara) 25%, transparent 25%,
+            transparent 75%, var(--diag-menu-clara) 75%, var(--diag-menu-clara)),
+        linear-gradient(45deg,
+            var(--diag-menu-clara) 25%, transparent 25%,
+            transparent 75%, var(--diag-menu-clara) 75%, var(--diag-menu-clara));
+    background-size: 70px 70px;
+    background-position: 0 0, 35px 35px;
     background-repeat: repeat;
     background-attachment: fixed;
     animation: scrollDiagonal 3.6s linear infinite;
@@ -1402,13 +1409,20 @@ a, button, .quiz-alternative, .btn-neon, [role="button"], input[type="submit"] {
     text-shadow: 0 1px 2px rgba(0,0,0,0.4);
     border: var(--borda-jogo-largura) solid var(--borda-jogo) !important;
     background-repeat: repeat;
+    background-size: 40px 40px;
+    background-position: 0 0, 20px 20px;
     animation: scrollDiagonalSmall 2.4s linear infinite;
 }
 
 .btn-jogar-arcade {
-    background-image: repeating-linear-gradient(45deg,
-        var(--diag-jogar-clara) 0px, var(--diag-jogar-clara) 16px,
-        var(--diag-jogar-escura) 16px, var(--diag-jogar-escura) 32px);
+    background-color: var(--diag-jogar-clara);
+    /* background-image:
+        linear-gradient(45deg,
+            var(--diag-jogar-clara) 25%, transparent 25%,
+            transparent 75%, var(--diag-jogar-clara) 75%, var(--diag-jogar-clara)),
+        linear-gradient(45deg,
+            var(--diag-jogar-clara) 25%, transparent 25%,
+            transparent 75%, var(--diag-jogar-clara) 75%, var(--diag-jogar-clara)); */
     box-shadow: 0 7px 0 var(--borda-jogo), 0 11px 18px rgba(185, 59, 50, 0.35);
 }
 
@@ -1427,9 +1441,14 @@ a, button, .quiz-alternative, .btn-neon, [role="button"], input[type="submit"] {
 .btn-ranking-arcade {
     color: #4a3300;
     text-shadow: none;
-    background-image: repeating-linear-gradient(45deg,
-        var(--diag-ranking-clara) 0px, var(--diag-ranking-clara) 16px,
-        var(--diag-ranking-escura) 16px, var(--diag-ranking-escura) 32px);
+    background-color: var(--diag-ranking-clara);
+    /* background-image:
+        linear-gradient(45deg,
+            var(--diag-ranking-clara) 25%, transparent 25%,
+            transparent 75%, var(--diag-ranking-clara) 75%, var(--diag-ranking-clara)),
+        linear-gradient(45deg,
+            var(--diag-ranking-clara) 25%, transparent 25%,
+            transparent 75%, var(--diag-ranking-clara) 75%, var(--diag-ranking-clara)); */
     box-shadow: 0 7px 0 var(--borda-jogo), 0 11px 18px rgba(224, 164, 34, 0.35);
 }
 
@@ -1448,9 +1467,14 @@ a, button, .quiz-alternative, .btn-neon, [role="button"], input[type="submit"] {
 .btn-comojogar-arcade {
     color: #0d3a57;
     text-shadow: none;
-    background-image: repeating-linear-gradient(45deg,
-        var(--diag-comojogar-clara) 0px, var(--diag-comojogar-clara) 16px,
-        var(--diag-comojogar-escura) 16px, var(--diag-comojogar-escura) 32px);
+    background-color: var(--diag-comojogar-clara);
+    /* background-image:
+        linear-gradient(45deg,
+            var(--diag-comojogar-clara) 25%, transparent 25%,
+            transparent 75%, var(--diag-comojogar-clara) 75%, var(--diag-comojogar-clara)),
+        linear-gradient(45deg,
+            var(--diag-comojogar-clara) 25%, transparent 25%,
+            transparent 75%, var(--diag-comojogar-clara) 75%, var(--diag-comojogar-clara)); */
     box-shadow: 0 7px 0 var(--borda-jogo), 0 11px 18px rgba(159, 214, 251, 0.45);
 }
 
@@ -1491,6 +1515,7 @@ a, button, .quiz-alternative, .btn-neon, [role="button"], input[type="submit"] {
     pointer-events: none;
     transform: scaleY(1);
     transform-origin: top;
+    will-change: transform;
 }
 
 .transicao-tela::before {
