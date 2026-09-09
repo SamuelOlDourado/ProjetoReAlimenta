@@ -34,11 +34,16 @@
         }
     }
 
+    /** Player de animação do mascote (24 imagens individuais por estado, ver sprites.js). */
+    const mascotePlayer = (window.ReAlimentaSprites && elMascoteSprite)
+        ? window.ReAlimentaSprites.criarAnimacaoQuadros(elMascoteSprite, CONFIG.mascoteBase + "/parado")
+        : null;
+
     /** Troca a animação do mascote (parado / acerto / erro). Não faz nada se as
-     * imagens do sprite ainda não tiverem sido adicionadas - só troca o atributo. */
+     * imagens do mascote ainda não tiverem sido adicionadas nas pastas esperadas. */
     function mascote(estado) {
-        if (elMascoteSprite) {
-            elMascoteSprite.setAttribute("data-estado", estado);
+        if (mascotePlayer) {
+            mascotePlayer.trocarPasta(CONFIG.mascoteBase + "/" + estado);
         }
     }
 

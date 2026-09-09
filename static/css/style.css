@@ -1039,31 +1039,13 @@ a, button, .quiz-alternative, .btn-neon, [role="button"], input[type="submit"] {
     overflow: hidden;
 }
 
-/* Avatar animado do 1º/2º/3º lugar: sprite sheet com 24 quadros em fileira (arquivo único por posição).
-   Basta apontar cada background-image para o arquivo quando as artes estiverem prontas. */
+/* Avatar animado do 1º/2º/3º lugar: 24 imagens individuais por posição (ver sprites.js),
+   trocadas automaticamente via o atributo data-sprite-base no HTML. */
 .podio-avatar-animado {
     background-repeat: no-repeat;
-    background-position: 0 0;
-    background-size: 2400% 100%;
+    background-position: center;
+    background-size: contain;
     image-rendering: pixelated;
-    animation-name: sprite24Loop;
-    animation-timing-function: steps(23);
-    animation-iteration-count: infinite;
-}
-
-.podio-avatar-animado[data-posicao="1"] {
-    background-image: url('../img/ranking/top1.png');
-    animation-duration: 1.4s;
-}
-
-.podio-avatar-animado[data-posicao="2"] {
-    background-image: url('../img/ranking/top2.png');
-    animation-duration: 1.6s;
-}
-
-.podio-avatar-animado[data-posicao="3"] {
-    background-image: url('../img/ranking/top3.png');
-    animation-duration: 1.8s;
 }
 
 .podio-nome {
@@ -1365,14 +1347,8 @@ a, button, .quiz-alternative, .btn-neon, [role="button"], input[type="submit"] {
 
 /* ===================== Novidades de refinamento ===================== */
 
-/* Sprite genérico de 24 quadros em fileira (reaproveitado pelo mascote e pelo pódio) */
-@keyframes sprite24Loop {
-    from { background-position: 0% 0; }
-    to   { background-position: 100% 0; }
-}
-
 /* Mascote animado da tela de perguntas (canto inferior direito).
-   Estrutura pronta para receber 3 sprite sheets (24 quadros cada, em fileira):
+   3 animações de 24 quadros cada (imagens individuais, ver sprites.js):
    parado (loop constante), acerto e erro (tocam enquanto o feedback está na tela). */
 .mascote-wrap {
     position: fixed;
@@ -1388,42 +1364,35 @@ a, button, .quiz-alternative, .btn-neon, [role="button"], input[type="submit"] {
     width: 100%;
     height: 100%;
     background-repeat: no-repeat;
-    background-position: 0% 0;
-    background-size: 2400% 100%;
+    background-position: center;
+    background-size: contain;
     image-rendering: pixelated;
-    animation-name: sprite24Loop;
-    animation-timing-function: steps(23);
-    animation-iteration-count: infinite;
     filter: drop-shadow(0 4px 6px rgba(0,0,0,0.35));
 }
 
-.mascote-sprite[data-estado="parado"] {
-    background-image: url('../img/mascote/parado.png');
-    animation-duration: 1.8s;
+/* Aparece só quando o primeiro quadro de uma animação não é encontrado (404) -
+   ajuda a enxergar rapidamente que falta apontar/enviar as imagens certas. */
+.sprite-vazio {
+    background-image: none !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed rgba(0, 0, 0, 0.35);
+    background-color: rgba(255, 255, 255, 0.35);
 }
 
-.mascote-sprite[data-estado="acerto"] {
-    background-image: url('../img/mascote/acerto.png');
-    animation-duration: 1s;
-}
-
-.mascote-sprite[data-estado="erro"] {
-    background-image: url('../img/mascote/erro.png');
-    animation-duration: 1s;
+.sprite-vazio::after {
+    content: "?";
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 1.6rem;
+    color: rgba(0, 0, 0, 0.45);
 }
 
 @media (max-width: 576px) {
     .mascote-wrap {
         width: 4.6rem;
         height: 4.6rem;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .mascote-sprite,
-    .podio-avatar-animado {
-        animation: none;
-        background-position: 0 0;
     }
 }
 

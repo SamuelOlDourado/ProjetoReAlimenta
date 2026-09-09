@@ -35,7 +35,9 @@
                     <div class="podio">
                         {% for jogador in ranking[:3] %}
                         <div class="podio-lugar podio-{{ loop.index }}">
-                            <div class="podio-avatar podio-avatar-animado" data-posicao="{{ loop.index }}" aria-hidden="true"></div>
+                            <div class="podio-avatar podio-avatar-animado"
+                                 data-sprite-base="{{ url_for('static', filename='img/ranking/top' ~ loop.index) }}"
+                                 aria-hidden="true"></div>
                             <div class="podio-nome">{{ jogador.apelido }}</div>
                             <div class="podio-pontos">{{ jogador.pontuacao }} PTS</div>
                             <div class="podio-degrau">{{ loop.index }}º</div>
@@ -101,6 +103,7 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/transicao.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/sprites.js') }}"></script>
     <script src="{{ url_for('static', filename='js/sound.js') }}"></script>
 </body>
 </html>

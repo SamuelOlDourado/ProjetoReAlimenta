@@ -15,11 +15,11 @@
 
     <div class="transicao-tela" id="transicao-tela" aria-hidden="true"></div>
 
-    <!-- Estrutura pronta para o mascote (ainda sem as imagens). Basta colocar os 3 sprite
-         sheets (24 quadros cada, em fileira) em static/img/mascote/parado.png, acerto.png
-         e erro.png que o CSS já assume esses caminhos. -->
+    <!-- Estrutura pronta para o mascote (ainda sem as imagens). Cada animação é uma pasta
+         com 24 imagens numeradas (frame01.png ... frame24.png):
+         static/img/mascote/parado/, static/img/mascote/acerto/, static/img/mascote/erro/ -->
     <div class="mascote-wrap" aria-hidden="true">
-        <div class="mascote-sprite" id="mascote-sprite" data-estado="parado"></div>
+        <div class="mascote-sprite" id="mascote-sprite"></div>
     </div>
 
     <button type="button" class="btn-mudo" data-botao-mudo title="Silenciar som" aria-pressed="false">
@@ -52,7 +52,7 @@
                 
                 <section id="tela-pergunta">
                     <div class="quiz-question" id="enunciado">
-                        Carregando pergunta....
+                        Carregando pergunta...
                     </div>
 
                     <div class="quiz-alternatives" id="alternativas">
@@ -113,10 +113,12 @@
     <script>
         const CONFIG = {
             totalPerguntas: {{ total_perguntas }},
-            tempoTotalPartida: {{ tempo_total_partida }}
+            tempoTotalPartida: {{ tempo_total_partida }},
+            mascoteBase: "{{ url_for('static', filename='img/mascote') }}"
         };
     </script>
     <script src="{{ url_for('static', filename='js/transicao.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/sprites.js') }}"></script>
     <script src="{{ url_for('static', filename='js/sound.js') }}"></script>
     <script src="{{ url_for('static', filename='js/quiz.js') }}"></script>
 </body>
