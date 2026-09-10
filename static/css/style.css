@@ -95,14 +95,14 @@ body {
 }
 
 .realimenta-bg {
-    background-color: var(--diag-menu-escura);
+    background-color: var(--diag-menu-clara);
     background-image:
         linear-gradient(45deg,
-            var(--diag-menu-clara) 25%, transparent 25%,
-            transparent 75%, var(--diag-menu-clara) 75%, var(--diag-menu-clara)),
+            var(--verde) 25%, transparent 25%,
+            transparent 75%, var(--verde) 75%, var(--verde)),
         linear-gradient(45deg,
-            var(--diag-menu-clara) 25%, transparent 25%,
-            transparent 75%, var(--diag-menu-clara) 75%, var(--diag-menu-clara));
+            var(--verde) 25%, transparent 25%,
+            transparent 75%, var(--verde) 75%, var(--verde));
     background-size: 70px 70px;
     background-position: 0 0, 35px 35px;
     background-repeat: repeat;
@@ -1431,8 +1431,8 @@ a, button, .quiz-alternative, .btn-neon, [role="button"], input[type="submit"] {
 
 @media (max-width: 576px) {
     .mascote-wrap {
-        width: 8rem;
-        height: 8rem;
+        width: 12rem;
+        height: 12rem;
     }
 }
 
