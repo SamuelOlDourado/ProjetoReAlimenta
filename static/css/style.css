@@ -1431,8 +1431,8 @@ a, button, .quiz-alternative, .btn-neon, [role="button"], input[type="submit"] {
 
 @media (max-width: 576px) {
     .mascote-wrap {
-        width: 4.6rem;
-        height: 4.6rem;
+        width: 8rem;
+        height: 8rem;
     }
 }
 
