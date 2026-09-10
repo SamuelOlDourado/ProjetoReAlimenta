@@ -1392,11 +1392,11 @@ a, button, .quiz-alternative, .btn-neon, [role="button"], input[type="submit"] {
    parado (loop constante), acerto e erro (tocam enquanto o feedback está na tela). */
 .mascote-wrap {
     position: fixed;
-    right: max(1rem, env(safe-area-inset-right));
-    bottom: max(1rem, env(safe-area-inset-bottom));
+    right: max( env(safe-area-inset-right));
+    bottom: max( env(safe-area-inset-bottom));
     z-index: 45;
-    width: 6.5rem;
-    height: 6.5rem;
+    width: 12rem;
+    height: 12rem;
     pointer-events: none;
 }
 

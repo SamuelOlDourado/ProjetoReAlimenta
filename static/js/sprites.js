@@ -41,7 +41,7 @@
      * @param {HTMLElement} elemento elemento que vai exibir a animação (via background-image)
      * @param {string} pastaInicial pasta com os 24 quadros dessa animação
      * @param {object} [opcoes]
-     * @param {number} [opcoes.frames=24] quantidade de quadros
+     * @param {number} [opcoes.frames=48] quantidade de quadros
      * @param {number} [opcoes.fps=12] velocidade da animação
      * @param {string} [opcoes.prefixo="frame"] prefixo do nome do arquivo
      * @param {string} [opcoes.extensao="png"] extensão do arquivo
@@ -49,7 +49,7 @@
      */
     function criarAnimacaoQuadros(elemento, pastaInicial, opcoes) {
         opcoes = Object.assign(
-            { frames: 24, fps: 12, prefixo: "frame", extensao: "png", digitos: 2 },
+            { frames: 48, fps: 12, prefixo: "frame", extensao: "png", digitos: 2 },
             opcoes || {}
         );
 
@@ -135,7 +135,7 @@
             const pasta = el.getAttribute("data-sprite-base");
             if (!pasta) return;
             const opcoes = {
-                frames: parseInt(el.getAttribute("data-sprite-frames"), 10) || 24,
+                frames: parseInt(el.getAttribute("data-sprite-frames"), 10) || 48,
                 fps: parseInt(el.getAttribute("data-sprite-fps"), 10) || 12,
             };
             el._spriteAnim = criarAnimacaoQuadros(el, pasta, opcoes);
