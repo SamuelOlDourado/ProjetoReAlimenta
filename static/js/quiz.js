@@ -34,7 +34,7 @@
         }
     }
 
-    /** Player de animação do mascote (24 imagens individuais por estado, ver sprites.js). */
+    /** Player de animação do mascote (um .gif por estado, ver sprites.js). */
     const mascotePlayer = (window.ReAlimentaSprites && elMascoteSprite)
         ? window.ReAlimentaSprites.criarAnimacaoQuadros(elMascoteSprite, CONFIG.mascoteBase + "/parado")
         : null;

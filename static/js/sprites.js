@@ -1,144 +1,110 @@
 /**
- * Player de animação por quadros individuais (24 imagens numeradas por animação).
+ * Player de animação baseado em GIF (um único arquivo .gif por animação).
  *
- * Por que não usar spritesheet: exigiria que todos os quadros tivessem exatamente
- * a mesma largura e estivessem em uma única fileira, o que é fácil de errar sem
- * querer (grade em vez de fileira, quadro faltando, etc.) e o resultado fica
- * "quebrado" (pedaços de quadros diferentes aparecendo juntos). Com arquivos
- * separados, cada quadro é uma imagem inteira e independente: não tem como dar
- * esse tipo de erro de alinhamento.
+ * Por que a troca: o formato anterior carregava várias dezenas de imagens
+ * separadas por animação (uma por quadro) e precisava de um "relógio" manual
+ * em JS pra saber qual quadro mostrar a cada momento. Isso gerava muitas
+ * requisições HTTP só pra essa animação e ficava frágil: bastava faltar um
+ * quadro, ou a numeração vir errada, pra animação travar ou "pular".
+ * Spritesheet (todos os quadros numa imagem só) já tinha sido tentado antes e
+ * também deu problema, porque exige que todo quadro tenha exatamente a mesma
+ * largura numa única fileira — qualquer quadro fora do padrão faz a imagem
+ * "vazar" um pedaço do quadro errado.
  *
- * Estrutura de pastas esperada (uma pasta por animação, com os 24 quadros dentro):
- *   static/img/mascote/parado/frame01.png ... frame24.png
- *   static/img/mascote/acerto/frame01.png ... frame24.png
- *   static/img/mascote/erro/frame01.png ... frame24.png
- *   static/img/ranking/top1/frame01.png ... frame24.png
- *   static/img/ranking/top2/frame01.png ... frame24.png
- *   static/img/ranking/top3/frame01.png ... frame24.png
+ * Um .gif resolve os dois problemas ao mesmo tempo: é um arquivo só (uma
+ * requisição), e quem cuida da ordem e do tempo de cada quadro é o próprio
+ * navegador — não tem como desalinhar. O único cuidado é exportar o .gif já
+ * no tamanho/qualidade que vai aparecer na tela, já que ele não pode ser
+ * redimensionado quadro a quadro como as imagens separadas eram.
  *
- * Uso manual (ex: mascote, que precisa trocar de animação em tempo real):
- *   const player = window.ReAlimentaSprites.criarAnimacaoQuadros(elemento, pasta);
- *   player.trocarPasta(outraPasta);
+ * Estrutura de arquivos esperada (um .gif por animação — sem mais pastas):
+ *   static/img/mascote/parado.gif
+ *   static/img/mascote/acerto.gif
+ *   static/img/mascote/erro.gif
+ *   static/img/ranking/top1.gif
+ *   static/img/ranking/top2.gif
+ *   static/img/ranking/top3.gif
  *
- * Uso automático (ex: avatares do ranking, que nunca trocam de animação):
+ * Uso manual (mascote, que troca de animação em tempo real):
+ *   const player = window.ReAlimentaSprites.criarAnimacaoQuadros(elemento, "/static/img/mascote/parado");
+ *   player.trocarPasta("/static/img/mascote/acerto"); // troca de gif e reinicia do quadro 1
+ *
+ * Uso automático (avatares do ranking, que nunca trocam de animação):
  *   <div data-sprite-base="/static/img/ranking/top1"></div>
  *   (sprites.js já inicia sozinho ao carregar a página)
+ *
+ * Os nomes das funções (criarAnimacaoQuadros/trocarPasta) e o atributo
+ * data-sprite-base foram mantidos como estavam de propósito, para não
+ * precisar mexer no quiz.js nem nos templates: por dentro, agora eles só
+ * apontam o background-image pro arquivo "<base>.gif", sem nenhum passo a
+ * passo manual de quadros.
  */
 (function (window, document) {
     "use strict";
 
-    function numeroComZeros(indice, digitos) {
-        return String(indice + 1).padStart(digitos, "0");
+    /** Monta o caminho do .gif a partir da base (sem extensão). */
+    function caminhoDoGif(base) {
+        return base.replace(/\/+$/, "") + ".gif";
     }
 
-    function caminhoDoQuadro(pastaBase, indice, opcoes) {
-        const base = pastaBase.replace(/\/+$/, "");
-        const numero = numeroComZeros(indice, opcoes.digitos);
-        return base + "/" + opcoes.prefixo + numero + "." + opcoes.extensao;
+    function marcarComoVazio(elemento, vazio) {
+        if (!elemento) return;
+        elemento.classList.toggle("sprite-vazio", vazio);
     }
 
     /**
      * @param {HTMLElement} elemento elemento que vai exibir a animação (via background-image)
-     * @param {string} pastaInicial pasta com os 24 quadros dessa animação
-     * @param {object} [opcoes]
-     * @param {number} [opcoes.frames=48] quantidade de quadros
-     * @param {number} [opcoes.fps=12] velocidade da animação
-     * @param {string} [opcoes.prefixo="frame"] prefixo do nome do arquivo
-     * @param {string} [opcoes.extensao="png"] extensão do arquivo
-     * @param {number} [opcoes.digitos=2] dígitos do número (frame01 = 2 dígitos)
+     * @param {string} baseInicial caminho da animação SEM ".gif" no final (ex: ".../mascote/parado")
      */
-    function criarAnimacaoQuadros(elemento, pastaInicial, opcoes) {
-        opcoes = Object.assign(
-            { frames: 48, fps: 12, prefixo: "frame", extensao: "png", digitos: 2 },
-            opcoes || {}
-        );
+    function criarAnimacaoQuadros(elemento, baseInicial) {
+        let baseAtual = null;
 
-        let quadroAtual = 0;
-        let intervaloId = null;
-        let imagens = [];
-        let pastaAtual = null;
-
-        function desenharQuadroAtual() {
-            const img = imagens[quadroAtual];
-            if (!elemento || !img) return;
-            elemento.style.backgroundImage = "url('" + img.src + "')";
-        }
-
-        function marcarComoVazio(vazio) {
+        function desenhar(url) {
             if (!elemento) return;
-            elemento.classList.toggle("sprite-vazio", vazio);
+            elemento.style.backgroundImage = url ? "url('" + url + "')" : "none";
         }
 
-        function precarregarPasta(pasta) {
-            const lista = [];
-            for (let i = 0; i < opcoes.frames; i++) {
-                const img = new Image();
-                if (i === 0) {
-                    // Usa só o 1º quadro para detectar se a pasta existe/tem imagem,
-                    // evitando repetir o aviso 24 vezes.
-                    img.addEventListener("load", function () {
-                        marcarComoVazio(false);
-                    });
-                    img.addEventListener("error", function () {
-                        marcarComoVazio(true);
-                        console.warn(
-                            "[ReAlimentaSprites] imagem não encontrada: " + img.src +
-                            " — confira se a pasta \"" + pasta + "\" existe e contém " +
-                            "frame01." + opcoes.extensao + " até frame" +
-                            numeroComZeros(opcoes.frames - 1, opcoes.digitos) + "." + opcoes.extensao
-                        );
-                    });
-                }
-                img.src = caminhoDoQuadro(pasta, i, opcoes);
-                lista.push(img);
-            }
-            return lista;
+        /** Troca para outra animação (outro .gif) e reinicia a partir do 1º quadro. */
+        function trocarPasta(novaBase) {
+            if (!novaBase || baseAtual === novaBase) return;
+            baseAtual = novaBase;
+
+            const url = caminhoDoGif(novaBase);
+            const teste = new Image();
+            teste.addEventListener("load", function () {
+                marcarComoVazio(elemento, false);
+            });
+            teste.addEventListener("error", function () {
+                marcarComoVazio(elemento, true);
+                console.warn(
+                    "[ReAlimentaSprites] gif não encontrado: " + url +
+                    " — confira se o arquivo \"" + url + "\" existe."
+                );
+            });
+            teste.src = url;
+
+            // Limpa antes de aplicar a nova url: alguns navegadores não reiniciam a
+            // animação do .gif do quadro 1 se o valor do background-image não mudar
+            // de fato entre um "frame" de renderização e outro.
+            desenhar("");
+            window.requestAnimationFrame(function () {
+                desenhar(url);
+            });
         }
 
-        function tocar() {
-            parar();
-            intervaloId = window.setInterval(function () {
-                quadroAtual = (quadroAtual + 1) % opcoes.frames;
-                desenharQuadroAtual();
-            }, 1000 / opcoes.fps);
-        }
-
-        function parar() {
-            if (intervaloId) {
-                window.clearInterval(intervaloId);
-                intervaloId = null;
-            }
-        }
-
-        /** Troca para outra animação (outra pasta de 24 quadros) e reinicia do quadro 1. */
-        function trocarPasta(novaPasta) {
-            if (pastaAtual === novaPasta) return;
-            pastaAtual = novaPasta;
-            quadroAtual = 0;
-            imagens = precarregarPasta(novaPasta);
-            desenharQuadroAtual();
-            tocar();
-        }
-
-        trocarPasta(pastaInicial);
+        trocarPasta(baseInicial);
 
         return {
             trocarPasta: trocarPasta,
-            parar: parar,
-            tocar: tocar,
         };
     }
 
     function autoIniciar() {
         document.querySelectorAll("[data-sprite-base]").forEach(function (el) {
             if (el._spriteAnim) return;
-            const pasta = el.getAttribute("data-sprite-base");
-            if (!pasta) return;
-            const opcoes = {
-                frames: parseInt(el.getAttribute("data-sprite-frames"), 10) || 48,
-                fps: parseInt(el.getAttribute("data-sprite-fps"), 10) || 12,
-            };
-            el._spriteAnim = criarAnimacaoQuadros(el, pasta, opcoes);
+            const base = el.getAttribute("data-sprite-base");
+            if (!base) return;
+            el._spriteAnim = criarAnimacaoQuadros(el, base);
         });
     }
 
