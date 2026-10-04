@@ -15,6 +15,13 @@
 
     <div class="transicao-tela" id="transicao-tela" aria-hidden="true"></div>
 
+    <!-- Camada do confete: só aparece quando o jogador acerta uma pergunta
+         (ver confetti.js). Troque a imagem em static/img/confetti.png pela
+         arte final quando quiser - é um único PNG reaproveitado várias vezes. -->
+    <div class="confete-camada" id="confete-camada"
+         data-confete-imagem="{{ url_for('static', filename='img/confetti.png') }}"
+         aria-hidden="true"></div>
+
     <!-- Estrutura pronta para o mascote (ainda sem os gifs). Cada animação é um
          único arquivo .gif:
          static/img/mascote/parado.gif, static/img/mascote/acerto.gif, static/img/mascote/erro.gif -->
@@ -120,6 +127,7 @@
     <script src="{{ url_for('static', filename='js/transicao.js') }}"></script>
     <script src="{{ url_for('static', filename='js/sprites.js') }}"></script>
     <script src="{{ url_for('static', filename='js/sound.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/confetti.js') }}"></script>
     <script src="{{ url_for('static', filename='js/quiz.js') }}"></script>
 </body>
 </html>

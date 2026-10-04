@@ -34,6 +34,14 @@
         }
     }
 
+    /** Dispara a chuva de confete (ver confetti.js). Só é chamada quando o
+     * jogador acerta a pergunta. */
+    function confete() {
+        if (window.ReAlimentaConfete) {
+            window.ReAlimentaConfete.estourar();
+        }
+    }
+
     /** Player de animação do mascote (um .gif por estado, ver sprites.js). */
     const mascotePlayer = (window.ReAlimentaSprites && elMascoteSprite)
         ? window.ReAlimentaSprites.criarAnimacaoQuadros(elMascoteSprite, CONFIG.mascoteBase + "/parado")
@@ -250,6 +258,7 @@
 
         if (data.acertou) {
             mascote("acerto");
+            confete();
             elPontosGanhos.textContent = "+" + data.pontos_ganhos + " PONTOS";
             elDicaAcerto.textContent = data.dica_sustentavel;
             elFeedbackAcerto.classList.remove("d-none");

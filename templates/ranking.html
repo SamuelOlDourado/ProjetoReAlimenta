@@ -35,9 +35,9 @@
                     <div class="podio">
                         {% for jogador in ranking[:3] %}
                         <div class="podio-lugar podio-{{ loop.index }}">
-                            <div class="podio-avatar podio-avatar-animado"
-                                 data-sprite-base="{{ url_for('static', filename='img/ranking/top' ~ loop.index) }}"
-                                 aria-hidden="true"></div>
+                            <div class="podio-avatar">
+                                <img src="{{ url_for('static', filename='img/resultado/lugar' ~ loop.index ~ '.webp') }}" class="icone-pixel" alt="Ícone de {{ loop.index }}º lugar" aria-hidden="true">
+                            </div>
                             <div class="podio-nome">{{ jogador.apelido }}</div>
                             <div class="podio-pontos">{{ jogador.pontuacao }} PTS</div>
                             <div class="podio-degrau">{{ loop.index }}º</div>

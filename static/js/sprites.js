@@ -21,23 +21,23 @@
  *   static/img/mascote/parado.gif
  *   static/img/mascote/acerto.gif
  *   static/img/mascote/erro.gif
- *   static/img/ranking/top1.gif
- *   static/img/ranking/top2.gif
- *   static/img/ranking/top3.gif
  *
- * Uso manual (mascote, que troca de animação em tempo real):
+ * Uso manual (mascote, que troca de animação em tempo real — hoje o único
+ * ponto do projeto que usa este player):
  *   const player = window.ReAlimentaSprites.criarAnimacaoQuadros(elemento, "/static/img/mascote/parado");
  *   player.trocarPasta("/static/img/mascote/acerto"); // troca de gif e reinicia do quadro 1
  *
- * Uso automático (avatares do ranking, que nunca trocam de animação):
- *   <div data-sprite-base="/static/img/ranking/top1"></div>
- *   (sprites.js já inicia sozinho ao carregar a página)
+ * Uso automático (para qualquer elemento que precise de uma animação fixa,
+ * sem trocar de estado — nenhum elemento do projeto usa isso no momento,
+ * já que o pódio do ranking voltou a usar ícones estáticos):
+ *   <div data-sprite-base="/static/img/alguma-coisa"></div>
+ *   (sprites.js inicia sozinho ao carregar a página)
  *
  * Os nomes das funções (criarAnimacaoQuadros/trocarPasta) e o atributo
  * data-sprite-base foram mantidos como estavam de propósito, para não
- * precisar mexer no quiz.js nem nos templates: por dentro, agora eles só
- * apontam o background-image pro arquivo "<base>.gif", sem nenhum passo a
- * passo manual de quadros.
+ * precisar mexer no quiz.js: por dentro, agora eles só apontam o
+ * background-image pro arquivo "<base>.gif", sem nenhum passo a passo
+ * manual de quadros.
  */
 (function (window, document) {
     "use strict";
